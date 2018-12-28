@@ -18,10 +18,10 @@ static vector<string> words;                 // the list of all the words for th
 /*
 * Used for trimming the whitespace at the start and end of a string
 */
-static std::string trim(const std::string& str) {
+static string trim(const string& str) {
 
 	size_t first = str.find_first_not_of(' ');
-	if (first == std::string::npos)
+	if (first == string::npos)
 	{
 		return "";
 	}
