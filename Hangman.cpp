@@ -9,7 +9,11 @@
 
 using namespace std;
 
+/* The maximum possible number of tries given to the user per word*/
 const static int MAX_TRIES = 7;
+
+static map<string, string> wordsWithClues;   // useful for fast retrieval of word-clue pairs
+static vector<string> words;                 // the list of all the words for the hangman game, which will act like a stack
 
 /*
 * Used for trimming the whitespace at the start and end of a string
@@ -39,7 +43,7 @@ static std::string trim(const std::string& str) {
 * words - The list of all the words that are added to
 * Returns an int representing the number of words successfully loaded from the file
 */
-static int setup(map<string, string>& wordsWithClues, vector<string>& words) {
+static int setup() {
 	cout << "Welcome to Hangman!" << endl;
 	cout << "Try to guess all the hidden words" << endl;
 	cout << endl;
@@ -95,7 +99,7 @@ static int setup(map<string, string>& wordsWithClues, vector<string>& words) {
 /*
 * For Debug Purposes only. Prints the contents of the map and the vector of words
 */
-static void printWords(const map<string, string>& wordsWithClues, const vector<string>& words) {
+static void printWords() {
 
 	cout << "|  MAP  |" << endl;
 	map<string, string>::const_iterator ma;
@@ -112,6 +116,35 @@ static void printWords(const map<string, string>& wordsWithClues, const vector<s
 	}
 }
 
+static int updateWords(const string& actualWord, string& hiddenWord, const char& firstChar, int& numTriesLeft) {
+	
+	if (actualWord.find(firstChar) != string::npos) {
+
+		for (int i = 0; i < actualWord.length(); i++) {
+			if (actualWord[i] == firstChar) {
+				hiddenWord[i] = firstChar;
+			}
+		}
+
+		cout << "Letter '" << firstChar << "' found" << endl;
+		cout << "=========================" << endl;
+
+	}
+	else {
+
+		cout << "Sorry, there's no letter '" << firstChar << "'" << endl;
+		cout << "=========================" << endl;
+		numTriesLeft--;
+		if (numTriesLeft <= 0) {
+			return -1;
+		}
+
+	}
+
+	return 0;
+}
+
+
 static int gameLoop(const string& actualWord, string& hiddenWord, string& lettersUsed, string& guess) {
 
 	int numTriesLeft = MAX_TRIES;       // the number of tries the user has left
@@ -124,7 +157,10 @@ static int gameLoop(const string& actualWord, string& hiddenWord, string& letter
 		cout << "Letters used already: " << lettersUsed << endl;
 		cout << endl;
 
-		cout << "So far the current word is:  " << hiddenWord << endl;
+		cout << "Clue: " << wordsWithClues[actualWord] << endl;
+		cout << endl;
+
+		cout << "The current word is:  " << hiddenWord << endl;
 		cout << endl;
 
 		cout << "Enter a letter: " << flush;
@@ -144,27 +180,8 @@ static int gameLoop(const string& actualWord, string& hiddenWord, string& letter
 		lettersUsed += firstChar;
 		sort(lettersUsed.begin(), lettersUsed.end());
 
-		if (actualWord.find(firstChar) != string::npos) {
-
-			for (int i = 0; i < actualWord.length(); i++) {
-				if (actualWord[i] == firstChar) {
-					hiddenWord[i] = firstChar;
-				}
-			}
-
-			cout << "Letter '" << firstChar << "' found" << endl;
-			cout << "========================="  << endl;
-
-		}
-		else {
-
-			cout << "Sorry, there's no letter '" << firstChar << "'" << endl;
-			cout << "=========================" << endl;
-			numTriesLeft--;
-			if (numTriesLeft <= 0) {
-				return -1;
-			}
-
+		if (updateWords(actualWord, hiddenWord, firstChar, numTriesLeft) != 0) {
+			return -1;
 		}
 	}
 
@@ -172,9 +189,6 @@ static int gameLoop(const string& actualWord, string& hiddenWord, string& letter
 }
 
 int main() {
-	
-	map<string, string> wordsWithClues;   // useful for fast retrieval of word-clue pairs
-	vector<string> words;                 // the list of all the words for the hangman game, which will act like a stack
 
 	int numWordsCorrect = 0;    // the number of words correctly guessed
 
@@ -182,13 +196,13 @@ int main() {
 	string actualWord = "";   // the actual word the user is trying to guess
 	string guess = "";        // the user's guess
 
-    setup(wordsWithClues, words);
+    setup();
 
 	// randomly shuffle the words loaded in
 	srand(static_cast<unsigned int>(time(0)));
 	random_shuffle(words.begin(), words.end());
 
-	//printWords(wordsWithClues, words);
+	printWords();
 
 	while (!words.empty()) {
 
